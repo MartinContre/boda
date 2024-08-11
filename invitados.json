@@ -1,23 +1,31 @@
 [
     {
         "familia": "Reyes Abrego",
-        "invitados": ["Citlalli", "Gibran", "Ximena", "Regina"],
-        "pases": 4,
-        "mesa": 3,
+        "invitados": [
+            {"nombre": "Citlalli", "confirmado": false},
+            {"nombre": "Gibran", "confirmado": false},
+            {"nombre": "Ximena", "confirmado": false},
+            {"nombre": "Regina", "confirmado": false}
+        ],
+        "mesa": "3",
         "celular": "4433651267"
     },
     {
         "familia": "Cacari Ortiz",
-        "invitados": ["Juan", "Pajara"],
-        "pases": 2,
-        "mesa": 3,
+        "invitados": [
+            {"nombre": "Juan", "confirmado": false},
+            {"nombre": "Pajara", "confirmado": false}
+        ],
+        "mesa": "3",
         "celular": "422132432"
     },
     {
         "familia": "Poasada",
-        "invitados": ["Kari", "Carlos"],
-        "pases": 2,
-        "mesa": 3,
+        "invitados": [
+            {"nombre": "Kari", "confirmado": false},
+            {"nombre": "Carlos", "confirmado": false}
+        ],
+        "mesa": "3",
         "celular": "422132433"
     }
 ]
