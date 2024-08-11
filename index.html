@@ -49,41 +49,100 @@
         }
     </style>
     <script>
+        let dataGlobal = [];
+
         function cargarDatos() {
             fetch('invitados.json')
                 .then(response => response.json())
-                .then(data => mostrarInvitados(data))
+                .then(data => {
+                    dataGlobal = data;
+                })
                 .catch(error => console.error('Error al cargar el archivo JSON:', error));
         }
 
-        function mostrarInvitados(data) {
-            const familiaInput = document.getElementById('familia').value.toLowerCase();
-            const invitadosDiv = document.getElementById('invitados');
-            invitadosDiv.innerHTML = '';
-            
-            const familia = data.find(f => f.familia.toLowerCase() === familiaInput);
+        function normalizeString(str) {
+            return str.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        }
 
-            if (familia) {
-                const invitadosHtml = familia.invitados.map(inv => 
-                    `<div class="invitado"><label><input type="checkbox" value="${inv}"> ${inv}</label></div>`
-                ).join('');
-                invitadosDiv.innerHTML = `
-                    <p><strong>Número de Pases:</strong> ${familia.pases}</p>
-                    <p><strong>Número de Mesa:</strong> ${familia.mesa}</p>
-                    <p><strong>Celular:</strong> ${familia.celular}</p>
-                    ${invitadosHtml}
-                    <label for="mensaje">¿Gustas dejarnos un mensaje?</label>
-                    <textarea id="mensaje" rows="4" placeholder="Escribe tu mensaje aquí..."></textarea>
-                    <button onclick="enviarConfirmacion()">Enviar Confirmación</button>
-                `;
+        function buscarFamilia() {
+            const familiaInput = normalizeString(document.getElementById('familia').value);
+            const coincidencias = dataGlobal.filter(f => normalizeString(f.familia).includes(familiaInput));
+            const coincidenciasDiv = document.getElementById('coincidencias');
+            coincidenciasDiv.innerHTML = '';
+
+            if (coincidencias.length > 0) {
+                coincidencias.forEach(familia => {
+                    const button = document.createElement('button');
+                    button.innerText = familia.familia;
+                    button.onclick = () => mostrarInvitados(familia.familia);
+                    coincidenciasDiv.appendChild(button);
+                });
             } else {
-                invitadosDiv.innerHTML = '<p>No se encontró la familia o ya han confirmado su asistencia.</p>';
+                coincidenciasDiv.innerHTML = '<p>No se encontraron coincidencias</p>';
             }
         }
 
-        function enviarConfirmacion() {
-            alert('Confirmación enviada. ¡Gracias por confirmar!');
-            location.reload();
+        function mostrarInvitados(familiaSeleccionada) {
+            const familia = dataGlobal.find(f => normalizeString(f.familia) === normalizeString(familiaSeleccionada));
+            const invitadosDiv = document.getElementById('invitados');
+            invitadosDiv.innerHTML = '';
+            
+            if (familia) {
+                const confirmacionesExistentes = familia.invitados.filter(inv => inv.confirmado).map(inv => inv.nombre);
+
+                const invitadosHtml = familia.invitados.map(inv =>
+                    `<div class="invitado"><label><input type="checkbox" name="invitado" value="${inv.nombre}" ${confirmacionesExistentes.includes(inv.nombre) ? 'disabled' : ''}> ${inv.nombre}</label></div>`
+                ).join('');
+
+                invitadosDiv.innerHTML = `
+                    ${invitadosHtml}
+                    <label for="mensaje">¿Gustas dejarnos un mensaje?</label>
+                    <textarea id="mensaje" rows="4" placeholder="Escribe tu mensaje aquí..."></textarea>
+                    <button onclick="enviarConfirmacion('${familia.familia}', '${familia.mesa}')">Enviar Confirmación</button>
+                `;
+            }
+        }
+
+        function enviarConfirmacion(familia, mesa) {
+            const checkboxes = document.getElementsByName('invitado');
+            const confirmaciones = [];
+            const mensaje = document.getElementById('mensaje').value;
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    confirmaciones.push({
+                        familia: familia,
+                        nombre: checkbox.value,
+                        asistencia: 'Confirmado',
+                        mensaje: mensaje
+                    });
+                }
+            });
+
+            guardarConfirmacion(confirmaciones, mesa);
+        }
+
+        function guardarConfirmacion(confirmaciones, mesa) {
+            fetch('guardar_confirmaciones.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ confirmaciones, mesa })
+            })
+            .then(response => response.text())
+            .then(result => {
+                alert('Confirmación enviada. ¡Gracias por confirmar!');
+                enviarWhatsApp(mesa);
+                location.reload();
+            })
+            .catch(error => console.error('Error al enviar la confirmación:', error));
+        }
+
+        function enviarWhatsApp(mesa) {
+            const celular = dataGlobal.find(f => normalizeString(f.familia) === normalizeString(familia)).celular;
+            const url = `https://api.whatsapp.com/send?phone=${celular}&text=¡Gracias%20por%20confirmar!%20Tu%20número%20de%20mesa%20es%20${mesa}.`;
+            window.open(url, '_blank');
         }
 
         document.addEventListener('DOMContentLoaded', cargarDatos);
@@ -93,8 +152,8 @@
     <div class="container">
         <h1>Confirmación de Boda</h1>
         <label for="familia">Familia:</label>
-        <input type="text" id="familia" placeholder="Ingrese el apellido de la familia">
-        <button onclick="cargarDatos()">Buscar Invitados</button>
+        <input type="text" id="familia" placeholder="Ingrese el apellido de la familia" oninput="buscarFamilia()">
+        <div id="coincidencias"></div>
         <div id="invitados"></div>
     </div>
 </body>
