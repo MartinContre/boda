@@ -3,10 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invitación de Boda</title>
+    <title>Confirmación de Boda</title>
+    <style>
+        /* Estilos personalizados */
+        body {
+            font-family: 'Cursive', sans-serif;
+            background-color: #e6f2ff;
+            margin: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #007BFF;
+        }
+        label, button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            font-family: 'Cursive', sans-serif;
+        }
+        input[type="text"], textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function cargarDatos() {
+            fetch('invitados.json')
+                .then(response => response.json())
+                .then(data => mostrarInvitados(data))
+                .catch(error => console.error('Error al cargar el archivo JSON:', error));
+        }
+
+        function mostrarInvitados(data) {
+            const familiaInput = document.getElementById('familia').value.toLowerCase();
+            const invitadosDiv = document.getElementById('invitados');
+            invitadosDiv.innerHTML = '';
+            
+            const familia = data.find(f => f.familia.toLowerCase() === familiaInput);
+
+            if (familia) {
+                const invitadosHtml = familia.invitados.map(inv => 
+                    `<div class="invitado"><label><input type="checkbox" value="${inv}"> ${inv}</label></div>`
+                ).join('');
+                invitadosDiv.innerHTML = `
+                    <p><strong>Número de Pases:</strong> ${familia.pases}</p>
+                    <p><strong>Número de Mesa:</strong> ${familia.mesa}</p>
+                    <p><strong>Celular:</strong> ${familia.celular}</p>
+                    ${invitadosHtml}
+                    <label for="mensaje">¿Gustas dejarnos un mensaje?</label>
+                    <textarea id="mensaje" rows="4" placeholder="Escribe tu mensaje aquí..."></textarea>
+                    <button onclick="enviarConfirmacion()">Enviar Confirmación</button>
+                `;
+            } else {
+                invitadosDiv.innerHTML = '<p>No se encontró la familia o ya han confirmado su asistencia.</p>';
+            }
+        }
+
+        function enviarConfirmacion() {
+            alert('Confirmación enviada. ¡Gracias por confirmar!');
+            location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarDatos);
+    </script>
 </head>
-<body style="text-align: center; padding: 20px; font-family: Arial, sans-serif;">
-    <h2>Invitación de Boda</h2>
-    <iframe src="https://bit.ly/BodaCrisMartin" width="100%" height="500px" style="border: none;"></iframe>
+<body>
+    <div class="container">
+        <h1>Confirmación de Boda</h1>
+        <label for="familia">Familia:</label>
+        <input type="text" id="familia" placeholder="Ingrese el apellido de la familia">
+        <button onclick="cargarDatos()">Buscar Invitados</button>
+        <div id="invitados"></div>
+    </div>
 </body>
 </html>
