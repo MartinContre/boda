@@ -47,6 +47,13 @@
         button:hover {
             background-color: #0056b3;
         }
+        .invitado {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+        }
     </style>
     <script>
         let dataGlobal = [];
@@ -140,9 +147,12 @@
         }
 
         function enviarWhatsApp(mesa) {
-            const celular = dataGlobal.find(f => normalizeString(f.familia) === normalizeString(familia)).celular;
-            const url = `https://api.whatsapp.com/send?phone=${celular}&text=¡Gracias%20por%20confirmar!%20Tu%20número%20de%20mesa%20es%20${mesa}.`;
-            window.open(url, '_blank');
+            const familia = dataGlobal.find(f => f.mesa === mesa);
+            if (familia) {
+                const celular = familia.celular;
+                const url = `https://api.whatsapp.com/send?phone=${celular}&text=¡Gracias%20por%20confirmar!%20Tu%20número%20de%20mesa%20es%20${mesa}.`;
+                window.open(url, '_blank');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', cargarDatos);
@@ -152,7 +162,8 @@
     <div class="container">
         <h1>Confirmación de Boda</h1>
         <label for="familia">Familia:</label>
-        <input type="text" id="familia" placeholder="Ingrese el apellido de la familia" oninput="buscarFamilia()">
+        <input type="text" id="familia" placeholder="Ingrese el apellido de la familia">
+        <button onclick="buscarFamilia()">Buscar</button>
         <div id="coincidencias"></div>
         <div id="invitados"></div>
     </div>
